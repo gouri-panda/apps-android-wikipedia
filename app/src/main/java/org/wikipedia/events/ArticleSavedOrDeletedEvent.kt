@@ -1,23 +1,13 @@
-package org.wikipedia.events;
+package org.wikipedia.events
 
-import org.wikipedia.readinglist.database.ReadingListPage;
+import org.wikipedia.readinglist.database.ReadingListPage
 
-public class ArticleSavedOrDeletedEvent {
-    private ReadingListPage[] pages;
+class ArticleSavedOrDeletedEvent(isAdded: Boolean, vararg pages: ReadingListPage) {
+    val pages: Array<ReadingListPage>
+    val isAdded: Boolean
 
-    private boolean isAdded;
-
-    public ReadingListPage[] getPages() {
-        return pages;
+    init {
+        this.pages = pages
+        this.isAdded = isAdded
     }
-
-    public ArticleSavedOrDeletedEvent(boolean isAdded, ReadingListPage... pages) {
-        this.pages = pages;
-        this.isAdded = isAdded;
-    }
-
-    public boolean isAdded() {
-        return isAdded;
-    }
-
 }
