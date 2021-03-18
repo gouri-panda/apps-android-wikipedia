@@ -1,55 +1,52 @@
-package org.wikipedia.analytics;
+package org.wikipedia.analytics
 
-import androidx.annotation.Nullable;
+import org.wikipedia.WikipediaApp
+import java.util.*
 
-import org.wikipedia.WikipediaApp;
+class TabFunnel : Funnel() {
+    constructor() : super(WikipediaApp.getInstance(), SCHEMA_NAME, SCHEMA_REVISION, SAMPLE_LOG_100) {
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class TabFunnel extends Funnel {
-    private static final String SCHEMA_NAME = "MobileWikiAppTabs";
-    private static final int SCHEMA_REVISION = 18118767;
-
-    public TabFunnel() {
-        super(WikipediaApp.getInstance(), SCHEMA_NAME, SCHEMA_REVISION, Funnel.SAMPLE_LOG_100);
     }
 
-    public void logOpenInNew(int size) {
-        log("openInNew", size);
+    fun logOpenInNew(size: Int) {
+        log("openInNew", size)
     }
 
-    public void logEnterList(int size) {
-        log("enterList", size);
+    fun logEnterList(size: Int) {
+        log("enterList", size)
     }
 
-    public void logCreateNew(int size) {
-        log("createNew", size);
+    fun logCreateNew(size: Int) {
+        log("createNew", size)
     }
 
-    public void logClose(int size, int index) {
-        log("close", size, index);
+    fun logClose(size: Int, index: Int) {
+        log("close", size, index)
     }
 
-    public void logSelect(int size, int index) {
-        log("select", size, index);
+    fun logSelect(size: Int, index: Int) {
+        log("select", size, index)
     }
 
-    public void logCancel(int size) {
-        log("cancel", size);
+    fun logCancel(size: Int) {
+        log("cancel", size)
     }
 
-    private void log(String action, int size) {
-        log(action, size, null);
-    }
-
-    private void log(String action, int size, @Nullable Integer index) {
-        List<Object> params = new ArrayList<>();
-        params.add("action"); params.add(action);
-        params.add("tabCount"); params.add(size);
+    private fun log(action: String, size: Int, index: Int? = null) {
+        val params: MutableList<Any> = ArrayList()
+        params.add("action")
+        params.add(action)
+        params.add("tabCount")
+        params.add(size)
         if (index != null) {
-            params.add("tabIndex"); params.add(index);
+            params.add("tabIndex")
+            params.add(index)
         }
-        log(params.toArray());
+        log(*params.toTypedArray())
+    }
+
+    companion object {
+        private const val SCHEMA_NAME = "MobileWikiAppTabs"
+        private const val SCHEMA_REVISION = 18118767
     }
 }
