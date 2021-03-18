@@ -1,67 +1,38 @@
-package org.wikipedia.dataclient;
+package org.wikipedia.dataclient
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.google.gson.JsonElement;
-
-import org.wikipedia.captcha.Captcha;
-import org.wikipedia.dataclient.mwapi.CreateAccountResponse;
-import org.wikipedia.dataclient.mwapi.MwParseResponse;
-import org.wikipedia.dataclient.mwapi.MwPostResponse;
-import org.wikipedia.dataclient.mwapi.MwQueryResponse;
-import org.wikipedia.dataclient.mwapi.MwStreamConfigsResponse;
-import org.wikipedia.dataclient.mwapi.SiteMatrix;
-import org.wikipedia.dataclient.watch.WatchPostResponse;
-import org.wikipedia.dataclient.wikidata.Claims;
-import org.wikipedia.dataclient.wikidata.Entities;
-import org.wikipedia.dataclient.wikidata.EntityPostResponse;
-import org.wikipedia.dataclient.wikidata.Search;
-import org.wikipedia.edit.Edit;
-import org.wikipedia.edit.preview.EditPreview;
-import org.wikipedia.login.LoginClient;
-import org.wikipedia.search.PrefixSearchResponse;
-
-import io.reactivex.rxjava3.core.Observable;
-import retrofit2.Call;
-import retrofit2.http.Field;
-import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.GET;
-import retrofit2.http.Headers;
-import retrofit2.http.POST;
-import retrofit2.http.Query;
+import com.google.gson.JsonElement
+import io.reactivex.rxjava3.core.Observable
+import org.wikipedia.captcha.Captcha
+import org.wikipedia.dataclient.mwapi.*
+import org.wikipedia.dataclient.watch.WatchPostResponse
+import org.wikipedia.dataclient.wikidata.Claims
+import org.wikipedia.dataclient.wikidata.Entities
+import org.wikipedia.dataclient.wikidata.EntityPostResponse
+import org.wikipedia.dataclient.wikidata.Search
+import org.wikipedia.edit.Edit
+import org.wikipedia.edit.preview.EditPreview
+import org.wikipedia.login.LoginClient.LoginResponse
+import org.wikipedia.search.PrefixSearchResponse
+import retrofit2.Call
+import retrofit2.http.*
 
 /**
  * Retrofit service layer for all API interactions, including regular MediaWiki and RESTBase.
  */
-public interface Service {
-    String WIKIPEDIA_URL = "https://wikipedia.org/";
-    String WIKIDATA_URL = "https://www.wikidata.org/";
-    String COMMONS_URL = "https://commons.wikimedia.org/";
-    String URL_FRAGMENT_FROM_COMMONS = "/wikipedia/commons/";
-
-    String MW_API_PREFIX = "w/api.php?format=json&formatversion=2&errorformat=plaintext&";
-
-    int PREFERRED_THUMB_SIZE = 320;
-
-    // Maximum cache time for site-specific data, and other things not likely to change very often.
-    int SITE_INFO_MAXAGE = 86400;
-
-
+interface Service {
     // ------- Search -------
-
     @GET(MW_API_PREFIX + "action=query&prop=pageimages&piprop=thumbnail"
             + "&converttitles=&pilicense=any&pithumbsize=" + PREFERRED_THUMB_SIZE)
-    @NonNull Observable<MwQueryResponse> getPageImages(@NonNull @Query("titles") String titles);
+    fun getPageImages(@Query("titles") titles: String): Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&redirects="
             + "&converttitles=&prop=description|pageimages|info&piprop=thumbnail"
             + "&pilicense=any&generator=prefixsearch&gpsnamespace=0&list=search&srnamespace=0"
             + "&inprop=varianttitles"
             + "&srwhat=text&srinfo=suggestion&srprop=&sroffset=0&srlimit=1&pithumbsize=" + PREFERRED_THUMB_SIZE)
-    @NonNull Observable<PrefixSearchResponse> prefixSearch(@Query("gpssearch") String title,
-                                                     @Query("gpslimit") int maxResults,
-                                                     @Query("srsearch") String repeat);
+    fun prefixSearch(@Query("gpssearch") title: String?,
+                     @Query("gpslimit") maxResults: Int,
+                     @Query("srsearch") repeat: String?): Observable<PrefixSearchResponse?>
 
     @GET(MW_API_PREFIX + "action=query&converttitles="
             + "&prop=description|pageimages|pageprops|info&ppprop=mainpage|disambiguation"
@@ -69,297 +40,295 @@ public interface Service {
             + "&inprop=varianttitles"
             + "&gsrinfo=&gsrprop=redirecttitle&piprop=thumbnail&pilicense=any&pithumbsize="
             + PREFERRED_THUMB_SIZE)
-    @NonNull Observable<MwQueryResponse> fullTextSearch(@Query("gsrsearch") String searchTerm,
-                                                  @Query("gsrlimit") int gsrLimit,
-                                                  @Query("continue") String cont,
-                                                  @Query("gsroffset") String gsrOffset);
-
+    fun fullTextSearch(@Query("gsrsearch") searchTerm: String?,
+                       @Query("gsrlimit") gsrLimit: Int,
+                       @Query("continue") cont: String?,
+                       @Query("gsroffset") gsrOffset: String?): Observable<MwQueryResponse?>
 
     // ------- Miscellaneous -------
-
-    @GET(MW_API_PREFIX + "action=fancycaptchareload")
-    @NonNull Observable<Captcha> getNewCaptcha();
+    @get:GET(MW_API_PREFIX + "action=fancycaptchareload")
+    val newCaptcha: Observable<Captcha?>
 
     @GET(MW_API_PREFIX + "action=query&prop=langlinks&lllimit=500&redirects=&converttitles=")
-    @NonNull Observable<MwQueryResponse> getLangLinks(@NonNull @Query("titles") String title);
+    fun getLangLinks(@Query("titles") title: String): Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&prop=description&redirects=1")
-    @NonNull Observable<MwQueryResponse> getDescription(@NonNull @Query("titles") String titles);
+    fun getDescription(@Query("titles") titles: String): Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&prop=imageinfo|imagelabels&iiprop=timestamp|user|url|mime|extmetadata&iiurlwidth=" + PREFERRED_THUMB_SIZE)
-    @NonNull Observable<MwQueryResponse> getImageInfo(@NonNull @Query("titles") String titles,
-                                                      @NonNull @Query("iiextmetadatalanguage") String lang);
+    fun getImageInfo(@Query("titles") titles: String,
+                     @Query("iiextmetadatalanguage") lang: String): Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&prop=videoinfo|imagelabels&viprop=timestamp|user|url|mime|extmetadata|derivatives&viurlwidth=" + PREFERRED_THUMB_SIZE)
-    @NonNull Observable<MwQueryResponse> getVideoInfo(@NonNull @Query("titles") String titles,
-                                                      @NonNull @Query("viextmetadatalanguage") String lang);
+    fun getVideoInfo(@Query("titles") titles: String,
+                     @Query("viextmetadatalanguage") lang: String): Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&meta=userinfo&prop=info&inprop=protection&uiprop=groups")
-    @NonNull Observable<MwQueryResponse> getProtectionInfo(@NonNull @Query("titles") String titles);
+    fun getProtectionInfo(@Query("titles") titles: String): Observable<MwQueryResponse?>
 
-    @GET(MW_API_PREFIX + "action=sitematrix&smtype=language&smlangprop=code|name|localname&maxage=" + SITE_INFO_MAXAGE + "&smaxage=" + SITE_INFO_MAXAGE)
-    @NonNull Observable<SiteMatrix> getSiteMatrix();
+    @get:GET(MW_API_PREFIX + "action=sitematrix&smtype=language&smlangprop=code|name|localname&maxage=" + SITE_INFO_MAXAGE + "&smaxage=" + SITE_INFO_MAXAGE)
+    val siteMatrix: Observable<SiteMatrix?>
 
-    @GET(MW_API_PREFIX + "action=query&meta=siteinfo&maxage=" + SITE_INFO_MAXAGE + "&smaxage=" + SITE_INFO_MAXAGE)
-    @NonNull Observable<MwQueryResponse> getSiteInfo();
+    @get:GET(MW_API_PREFIX + "action=query&meta=siteinfo&maxage=" + SITE_INFO_MAXAGE + "&smaxage=" + SITE_INFO_MAXAGE)
+    val siteInfo: Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=parse&prop=text&mobileformat=1&mainpage=1")
-    @NonNull Observable<MwParseResponse> parseTextForMainPage(@NonNull @Query("page") String mainPageTitle);
+    fun parseTextForMainPage(@Query("page") mainPageTitle: String): Observable<MwParseResponse?>
 
-    @Headers("Cache-Control: no-cache")
-    @GET(MW_API_PREFIX + "action=query&generator=random&redirects=1&grnnamespace=0&grnlimit=50&prop=pageprops|description")
-    @NonNull Observable<MwQueryResponse> getRandomWithPageProps();
+    @get:GET(MW_API_PREFIX + "action=query&generator=random&redirects=1&grnnamespace=0&grnlimit=50&prop=pageprops|description")
+    @get:Headers("Cache-Control: no-cache")
+    val randomWithPageProps: Observable<MwQueryResponse?>
 
-    @Headers("Cache-Control: no-cache")
-    @GET(MW_API_PREFIX + "action=query&generator=random&redirects=1&grnnamespace=6&grnlimit=100&prop=imagelabels")
-    @NonNull Observable<MwQueryResponse> getRandomWithImageLabels();
+    @get:GET(MW_API_PREFIX + "action=query&generator=random&redirects=1&grnnamespace=6&grnlimit=100&prop=imagelabels")
+    @get:Headers("Cache-Control: no-cache")
+    val randomWithImageLabels: Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&prop=categories&clprop=hidden&cllimit=500")
-    @NonNull Observable<MwQueryResponse> getCategories(@NonNull @Query("titles") String titles);
+    fun getCategories(@Query("titles") titles: String): Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&list=categorymembers&cmlimit=500")
-    @NonNull Observable<MwQueryResponse> getCategoryMembers(@NonNull @Query("cmtitle") String title,
-                                                            @Nullable @Query("cmcontinue") String continueStr);
+    fun getCategoryMembers(@Query("cmtitle") title: String,
+                           @Query("cmcontinue") continueStr: String?): Observable<MwQueryResponse?>
 
-    @Headers("Cache-Control: no-cache")
-    @GET(MW_API_PREFIX + "action=query&generator=random&redirects=1&grnnamespace=6&grnlimit=10&prop=description|imageinfo|revisions&rvprop=ids|timestamp|flags|comment|user|content&rvslots=mediainfo&iiprop=timestamp|user|url|mime|extmetadata&iiurlwidth=" + PREFERRED_THUMB_SIZE)
-    @NonNull Observable<MwQueryResponse> getRandomWithImageInfo();
+    @get:GET(MW_API_PREFIX + "action=query&generator=random&redirects=1&grnnamespace=6&grnlimit=10&prop=description|imageinfo|revisions&rvprop=ids|timestamp|flags|comment|user|content&rvslots=mediainfo&iiprop=timestamp|user|url|mime|extmetadata&iiurlwidth=" + PREFERRED_THUMB_SIZE)
+    @get:Headers("Cache-Control: no-cache")
+    val randomWithImageInfo: Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&generator=unreviewedimagelabels&guillimit=10&prop=imagelabels|imageinfo&iiprop=timestamp|user|url|mime|extmetadata&iiurlwidth=" + PREFERRED_THUMB_SIZE)
-    @NonNull Observable<MwQueryResponse> getImagesWithUnreviewedLabels(@NonNull @Query("uselang") String lang);
+    fun getImagesWithUnreviewedLabels(@Query("uselang") lang: String): Observable<MwQueryResponse?>
 
     @FormUrlEncoded
     @POST(MW_API_PREFIX + "action=options")
-    @NonNull Observable<MwPostResponse> postSetOptions(@NonNull @Field("change") String change,
-                                                       @NonNull @Field("token") String token);
+    fun postSetOptions(@Field("change") change: String,
+                       @Field("token") token: String): Observable<MwPostResponse?>
 
-    @GET(MW_API_PREFIX + "action=streamconfigs&format=json&constraints=destination_event_service=eventgate-analytics-external")
-    @NonNull Observable<MwStreamConfigsResponse> getStreamConfigs();
+    @get:GET(MW_API_PREFIX + "action=streamconfigs&format=json&constraints=destination_event_service=eventgate-analytics-external")
+    val streamConfigs: Observable<MwStreamConfigsResponse?>
 
     // ------- CSRF, Login, and Create Account -------
+    @get:GET(MW_API_PREFIX + "action=query&meta=tokens&type=csrf")
+    @get:Headers("Cache-Control: no-cache")
+    val csrfTokenCall: Call<MwQueryResponse?>
 
-    @Headers("Cache-Control: no-cache")
-    @GET(MW_API_PREFIX + "action=query&meta=tokens&type=csrf")
-    @NonNull Call<MwQueryResponse> getCsrfTokenCall();
+    @get:GET(MW_API_PREFIX + "action=query&meta=tokens&type=csrf")
+    @get:Headers("Cache-Control: no-cache")
+    val csrfToken: Observable<MwQueryResponse?>
 
-    @Headers("Cache-Control: no-cache")
-    @GET(MW_API_PREFIX + "action=query&meta=tokens&type=csrf")
-    @NonNull Observable<MwQueryResponse> getCsrfToken();
-
-    @SuppressWarnings("checkstyle:parameternumber")
     @FormUrlEncoded
     @POST(MW_API_PREFIX + "action=createaccount&createmessageformat=html")
-    @NonNull Observable<CreateAccountResponse> postCreateAccount(@NonNull @Field("username") String user,
-                                                           @NonNull @Field("password") String pass,
-                                                           @NonNull @Field("retype") String retype,
-                                                           @NonNull @Field("createtoken") String token,
-                                                           @NonNull @Field("createreturnurl") String returnurl,
-                                                           @Nullable @Field("email") String email,
-                                                           @Nullable @Field("captchaId") String captchaId,
-                                                           @Nullable @Field("captchaWord") String captchaWord);
+    fun postCreateAccount(@Field("username") user: String,
+                          @Field("password") pass: String,
+                          @Field("retype") retype: String,
+                          @Field("createtoken") token: String,
+                          @Field("createreturnurl") returnurl: String,
+                          @Field("email") email: String?,
+                          @Field("captchaId") captchaId: String?,
+                          @Field("captchaWord") captchaWord: String?): Observable<CreateAccountResponse?>
 
-    @Headers("Cache-Control: no-cache")
-    @GET(MW_API_PREFIX + "action=query&meta=tokens&type=login")
-    @NonNull Observable<JsonElement> getLoginToken();
-
-    @FormUrlEncoded
-    @POST(MW_API_PREFIX + "action=clientlogin&rememberMe=")
-    @NonNull Observable<LoginClient.LoginResponse> postLogIn(@Field("username") String user,
-                                                             @Field("password") String pass,
-                                                             @Field("logintoken") String token,
-                                                             @Field("loginreturnurl") String url);
+    @get:GET(MW_API_PREFIX + "action=query&meta=tokens&type=login")
+    @get:Headers("Cache-Control: no-cache")
+    val loginToken: Observable<JsonElement?>
 
     @FormUrlEncoded
     @POST(MW_API_PREFIX + "action=clientlogin&rememberMe=")
-    @NonNull Observable<LoginClient.LoginResponse> postLogIn(@Field("username") String user,
-                                                             @Field("password") String pass,
-                                                             @Field("retype") String retypedPass,
-                                                             @Field("OATHToken") String twoFactorCode,
-                                                             @Field("logintoken") String token,
-                                                             @Field("logincontinue") boolean loginContinue);
+    fun postLogIn(@Field("username") user: String?,
+                  @Field("password") pass: String?,
+                  @Field("logintoken") token: String?,
+                  @Field("loginreturnurl") url: String?): Observable<LoginResponse?>
+
+    @FormUrlEncoded
+    @POST(MW_API_PREFIX + "action=clientlogin&rememberMe=")
+    fun postLogIn(@Field("username") user: String?,
+                  @Field("password") pass: String?,
+                  @Field("retype") retypedPass: String?,
+                  @Field("OATHToken") twoFactorCode: String?,
+                  @Field("logintoken") token: String?,
+                  @Field("logincontinue") loginContinue: Boolean): Observable<LoginResponse?>
 
     @FormUrlEncoded
     @POST(MW_API_PREFIX + "action=logout")
-    @NonNull Observable<MwPostResponse> postLogout(@NonNull @Field("token") String token);
+    fun postLogout(@Field("token") token: String): Observable<MwPostResponse?>
 
-    @GET(MW_API_PREFIX + "action=query&meta=authmanagerinfo|tokens&amirequestsfor=create&type=createaccount")
-    @NonNull Observable<MwQueryResponse> getAuthManagerInfo();
+    @get:GET(MW_API_PREFIX + "action=query&meta=authmanagerinfo|tokens&amirequestsfor=create&type=createaccount")
+    val authManagerInfo: Observable<MwQueryResponse?>
 
-    @GET(MW_API_PREFIX + "action=query&meta=userinfo&uiprop=groups|blockinfo|editcount|latestcontrib")
-    @NonNull Observable<MwQueryResponse> getUserInfo();
+    @get:GET(MW_API_PREFIX + "action=query&meta=userinfo&uiprop=groups|blockinfo|editcount|latestcontrib")
+    val userInfo: Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&list=users&usprop=groups|cancreate")
-    @NonNull Observable<MwQueryResponse> getUserList(@Query("ususers") @NonNull String userNames);
-
+    fun getUserList(@Query("ususers") userNames: String): Observable<MwQueryResponse?>
 
     // ------- Notifications -------
-
     @Headers("Cache-Control: no-cache")
     @GET(MW_API_PREFIX + "action=query&meta=notifications&notformat=model&notlimit=max")
-    @NonNull Observable<MwQueryResponse> getAllNotifications(@Query("notwikis") @Nullable String wikiList,
-                                              @Query("notfilter") @Nullable String filter,
-                                              @Query("notcontinue") @Nullable String continueStr);
+    fun getAllNotifications(@Query("notwikis") wikiList: String?,
+                            @Query("notfilter") filter: String?,
+                            @Query("notcontinue") continueStr: String?): Observable<MwQueryResponse?>
 
     @FormUrlEncoded
     @POST(MW_API_PREFIX + "action=echomarkread")
-    @NonNull Observable<MwQueryResponse> markRead(@Field("token") @NonNull String token, @Field("list") @Nullable String readList, @Field("unreadlist") @Nullable String unreadList);
+    fun markRead(@Field("token") token: String, @Field("list") readList: String?, @Field("unreadlist") unreadList: String?): Observable<MwQueryResponse?>
 
-    @Headers("Cache-Control: no-cache")
-    @GET(MW_API_PREFIX + "action=query&meta=notifications&notwikis=*&notprop=list&notfilter=!read&notlimit=1")
-    @NonNull Observable<MwQueryResponse> getLastUnreadNotification();
+    @get:GET(MW_API_PREFIX + "action=query&meta=notifications&notwikis=*&notprop=list&notfilter=!read&notlimit=1")
+    @get:Headers("Cache-Control: no-cache")
+    val lastUnreadNotification: Observable<MwQueryResponse?>
 
-    @Headers("Cache-Control: no-cache")
-    @GET(MW_API_PREFIX + "action=query&meta=unreadnotificationpages&unplimit=max&unpwikis=*")
-    @NonNull Observable<MwQueryResponse> getUnreadNotificationWikis();
+    @get:GET(MW_API_PREFIX + "action=query&meta=unreadnotificationpages&unplimit=max&unpwikis=*")
+    @get:Headers("Cache-Control: no-cache")
+    val unreadNotificationWikis: Observable<MwQueryResponse?>
 
     @FormUrlEncoded
     @POST(MW_API_PREFIX + "action=echopushsubscriptions&command=create&provider=fcm")
-    @NonNull Observable<MwQueryResponse> subscribePush(@Field("token") @NonNull String csrfToken,
-                                                       @Field("providertoken") @NonNull String providerToken);
+    fun subscribePush(@Field("token") csrfToken: String,
+                      @Field("providertoken") providerToken: String): Observable<MwQueryResponse?>
 
     @FormUrlEncoded
     @POST(MW_API_PREFIX + "action=echopushsubscriptions&command=delete&provider=fcm")
-    @NonNull Observable<MwQueryResponse> unsubscribePush(@Field("token") @NonNull String csrfToken,
-                                                         @Field("providertoken") @NonNull String providerToken);
+    fun unsubscribePush(@Field("token") csrfToken: String,
+                        @Field("providertoken") providerToken: String): Observable<MwQueryResponse?>
 
     // ------- Editing -------
-
     @GET(MW_API_PREFIX + "action=query&prop=revisions&rvprop=content|timestamp|ids&rvlimit=1&converttitles=")
-    @NonNull Observable<MwQueryResponse> getWikiTextForSection(@NonNull @Query("titles") String title, @Query("rvsection") int section);
+    fun getWikiTextForSection(@Query("titles") title: String, @Query("rvsection") section: Int): Observable<MwQueryResponse?>
 
     @FormUrlEncoded
     @POST(MW_API_PREFIX + "action=parse&prop=text&sectionpreview=&pst=&mobileformat=")
-    @NonNull Observable<EditPreview> postEditPreview(@NonNull @Field("title") String title,
-                                                     @NonNull @Field("text") String text);
+    fun postEditPreview(@Field("title") title: String,
+                        @Field("text") text: String): Observable<EditPreview?>
 
     @FormUrlEncoded
     @POST(MW_API_PREFIX + "action=edit")
-    @SuppressWarnings("checkstyle:parameternumber")
-    @NonNull Observable<Edit> postEditSubmit(@NonNull @Field("title") String title,
-                                             @NonNull @Field("section") String section,
-                                             @Nullable @Field("sectiontitle") String newSectionTitle,
-                                             @NonNull @Field("summary") String summary,
-                                             @Nullable @Field("assert") String user,
-                                             @Nullable @Field("text") String text,
-                                             @Nullable @Field("appendtext") String appendText,
-                                             @Field("baserevid") long baseRevId,
-                                             @NonNull @Field("token") String token,
-                                             @Nullable @Field("captchaid") String captchaId,
-                                             @Nullable @Field("captchaword") String captchaWord);
+    fun postEditSubmit(@Field("title") title: String,
+                       @Field("section") section: String,
+                       @Field("sectiontitle") newSectionTitle: String?,
+                       @Field("summary") summary: String,
+                       @Field("assert") user: String?,
+                       @Field("text") text: String?,
+                       @Field("appendtext") appendText: String?,
+                       @Field("baserevid") baseRevId: Long,
+                       @Field("token") token: String,
+                       @Field("captchaid") captchaId: String?,
+                       @Field("captchaword") captchaWord: String?): Observable<Edit?>
 
     @GET(MW_API_PREFIX + "action=query&list=usercontribs&ucprop=ids|title|timestamp|comment|size|flags|sizediff|tags&meta=userinfo&uiprop=groups|blockinfo|editcount|latestcontrib")
-    @NonNull Observable<MwQueryResponse> getUserContributions(@NonNull @Query("ucuser") String username, @Query("uclimit") int maxCount, @Query("uccontinue") String uccontinue);
+    fun getUserContributions(@Query("ucuser") username: String, @Query("uclimit") maxCount: Int, @Query("uccontinue") uccontinue: String?): Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&prop=pageviews")
-    @NonNull Observable<MwQueryResponse> getPageViewsForTitles(@NonNull @Query("titles") String titles);
+    fun getPageViewsForTitles(@Query("titles") titles: String): Observable<MwQueryResponse?>
 
-    @GET(MW_API_PREFIX + "action=query&meta=wikimediaeditortaskscounts|userinfo&uiprop=groups|blockinfo|editcount|latestcontrib")
-    @NonNull Observable<MwQueryResponse> getEditorTaskCounts();
+    @get:GET(MW_API_PREFIX + "action=query&meta=wikimediaeditortaskscounts|userinfo&uiprop=groups|blockinfo|editcount|latestcontrib")
+    val editorTaskCounts: Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&generator=wikimediaeditortaskssuggestions&prop=pageprops&gwetstask=missingdescriptions&gwetslimit=3")
-    @NonNull Observable<MwQueryResponse> getEditorTaskMissingDescriptions(@NonNull @Query("gwetstarget") String targetLanguage);
+    fun getEditorTaskMissingDescriptions(@Query("gwetstarget") targetLanguage: String): Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&generator=wikimediaeditortaskssuggestions&prop=pageprops&gwetstask=descriptiontranslations&gwetslimit=3")
-    @NonNull Observable<MwQueryResponse> getEditorTaskTranslatableDescriptions(@NonNull @Query("gwetssource") String sourceLanguage,
-                                                                               @NonNull @Query("gwetstarget") String targetLanguage);
-
+    fun getEditorTaskTranslatableDescriptions(@Query("gwetssource") sourceLanguage: String,
+                                              @Query("gwetstarget") targetLanguage: String): Observable<MwQueryResponse?>
 
     // ------- Wikidata -------
-
     @GET(MW_API_PREFIX + "action=wbgetentities")
-    @NonNull Observable<Entities> getEntitiesByTitle(@Query("titles") @NonNull String titles,
-                                                     @Query("sites") @NonNull String sites);
+    fun getEntitiesByTitle(@Query("titles") titles: String,
+                           @Query("sites") sites: String): Observable<Entities?>
 
     @GET(MW_API_PREFIX + "action=wbsearchentities&type=item&limit=20")
-    @NonNull Observable<Search> searchEntities(@Query("search") @NonNull String searchTerm,
-                                               @Query("language") @NonNull String searchLang,
-                                               @Query("uselang") @NonNull String resultLang);
+    fun searchEntities(@Query("search") searchTerm: String,
+                       @Query("language") searchLang: String,
+                       @Query("uselang") resultLang: String): Observable<Search?>
 
     @GET(MW_API_PREFIX + "action=wbgetentities&props=labels&languagefallback=1")
-    @NonNull Observable<Entities> getWikidataLabels(@Query("ids") @NonNull String idList,
-                                                    @Query("languages") @NonNull String langList);
+    fun getWikidataLabels(@Query("ids") idList: String,
+                          @Query("languages") langList: String): Observable<Entities?>
 
-    @GET(MW_API_PREFIX + "action=wbgetclaims") @NonNull
-    Observable<Claims> getClaims(@Query("entity") @NonNull String entity,
-                                 @Query("property") @Nullable String property);
+    @GET(MW_API_PREFIX + "action=wbgetclaims")
+    fun getClaims(@Query("entity") entity: String,
+                  @Query("property") property: String?): Observable<Claims?>
 
     @GET(MW_API_PREFIX + "action=wbgetentities&props=descriptions|labels|sitelinks")
-    @NonNull Observable<Entities> getWikidataLabelsAndDescriptions(@Query("ids") @NonNull String idList);
+    fun getWikidataLabelsAndDescriptions(@Query("ids") idList: String): Observable<Entities?>
 
     @POST(MW_API_PREFIX + "action=wbsetclaim&errorlang=uselang")
     @FormUrlEncoded
-    Observable<MwPostResponse> postSetClaim(@NonNull @Field("claim") String claim,
-                                            @NonNull @Field("token") String token,
-                                            @Nullable @Field("summary") String summary,
-                                            @Nullable @Field("tags") String tags);
+    fun postSetClaim(@Field("claim") claim: String,
+                     @Field("token") token: String,
+                     @Field("summary") summary: String?,
+                     @Field("tags") tags: String?): Observable<MwPostResponse?>?
 
     @POST(MW_API_PREFIX + "action=wbsetdescription&errorlang=uselang")
     @FormUrlEncoded
-    @SuppressWarnings("checkstyle:parameternumber")
-    Observable<EntityPostResponse> postDescriptionEdit(@NonNull @Field("language") String language,
-                                                   @NonNull @Field("uselang") String useLang,
-                                                   @NonNull @Field("site") String site,
-                                                   @NonNull @Field("title") String title,
-                                                   @NonNull @Field("value") String newDescription,
-                                                   @Nullable @Field("summary") String summary,
-                                                   @NonNull @Field("token") String token,
-                                                   @Nullable @Field("assert") String user);
+    fun postDescriptionEdit(@Field("language") language: String,
+                            @Field("uselang") useLang: String,
+                            @Field("site") site: String,
+                            @Field("title") title: String,
+                            @Field("value") newDescription: String,
+                            @Field("summary") summary: String?,
+                            @Field("token") token: String,
+                            @Field("assert") user: String?): Observable<EntityPostResponse?>?
 
     @POST(MW_API_PREFIX + "action=wbsetlabel&errorlang=uselang")
     @FormUrlEncoded
-    @SuppressWarnings("checkstyle:parameternumber")
-    Observable<EntityPostResponse> postLabelEdit(@NonNull @Field("language") String language,
-                                             @NonNull @Field("uselang") String useLang,
-                                             @NonNull @Field("site") String site,
-                                             @NonNull @Field("title") String title,
-                                             @NonNull @Field("value") String newDescription,
-                                             @Nullable @Field("summary") String summary,
-                                             @NonNull @Field("token") String token,
-                                             @Nullable @Field("assert") String user);
+    fun postLabelEdit(@Field("language") language: String,
+                      @Field("uselang") useLang: String,
+                      @Field("site") site: String,
+                      @Field("title") title: String,
+                      @Field("value") newDescription: String,
+                      @Field("summary") summary: String?,
+                      @Field("token") token: String,
+                      @Field("assert") user: String?): Observable<EntityPostResponse?>?
 
     @POST(MW_API_PREFIX + "action=wbeditentity&errorlang=uselang")
     @FormUrlEncoded
-    Observable<EntityPostResponse> postEditEntity(@NonNull @Field("id") String id,
-                                              @NonNull @Field("token") String token,
-                                              @Nullable @Field("data") String data,
-                                              @Nullable @Field("summary") String summary,
-                                              @Nullable @Field("tags") String tags);
-
+    fun postEditEntity(@Field("id") id: String,
+                       @Field("token") token: String,
+                       @Field("data") data: String?,
+                       @Field("summary") summary: String?,
+                       @Field("tags") tags: String?): Observable<EntityPostResponse?>?
 
     @POST(MW_API_PREFIX + "action=reviewimagelabels")
     @FormUrlEncoded
-    Observable<MwPostResponse> postReviewImageLabels(@NonNull @Field("filename") String fileName,
-                                                     @NonNull @Field("token") String token,
-                                                     @NonNull @Field("batch") String batchLabels);
-    // ------- Watchlist -------
+    fun postReviewImageLabels(@Field("filename") fileName: String,
+                              @Field("token") token: String,
+                              @Field("batch") batchLabels: String): Observable<MwPostResponse?>?
 
+    // ------- Watchlist -------
     @Headers("Cache-Control: no-cache")
     @GET(MW_API_PREFIX + "action=query&prop=info&converttitles=&redirects=&inprop=watched")
-    @NonNull Observable<MwQueryResponse> getWatchedInfo(@NonNull @Query("titles") String titles);
+    fun getWatchedInfo(@Query("titles") titles: String): Observable<MwQueryResponse?>
 
-    @Headers("Cache-Control: no-cache")
-    @GET(MW_API_PREFIX + "action=query&list=watchlist&wllimit=500&wlallrev=1&wlprop=ids|title|flags|comment|parsedcomment|timestamp|sizes|user|loginfo")
-
-    @NonNull Observable<MwQueryResponse> getWatchlist();
+    @get:GET(MW_API_PREFIX + "action=query&list=watchlist&wllimit=500&wlallrev=1&wlprop=ids|title|flags|comment|parsedcomment|timestamp|sizes|user|loginfo")
+    @get:Headers("Cache-Control: no-cache")
+    val watchlist: Observable<MwQueryResponse?>
 
     @GET(MW_API_PREFIX + "action=query&prop=revisions&rvprop=ids|timestamp|flags|comment|user&rvlimit=2&rvdir=newer")
-    @NonNull Observable<MwQueryResponse> getRevisionDetails(@Query("titles") @NonNull String titles,
-                                                            @Query("rvstartid") @NonNull Long revisionStartId);
+    fun getRevisionDetails(@Query("titles") titles: String,
+                           @Query("rvstartid") revisionStartId: Long): Observable<MwQueryResponse?>
 
     @POST(MW_API_PREFIX + "action=thank")
     @FormUrlEncoded
-    Observable<EntityPostResponse> postThanksToRevision(@Field("rev") long revisionId,
-                                                        @NonNull @Field("token") String token);
+    fun postThanksToRevision(@Field("rev") revisionId: Long,
+                             @Field("token") token: String): Observable<EntityPostResponse?>?
 
     @POST(MW_API_PREFIX + "action=watch&converttitles=&redirects=")
     @FormUrlEncoded
-    Observable<WatchPostResponse> postWatch(@Nullable @Field("unwatch") Integer unwatch,
-                                            @Nullable @Field("pageids") String pageIds,
-                                            @Nullable @Field("titles") String titles,
-                                            @Nullable @Field("expiry") String expiry,
-                                            @NonNull @Field("token") String token);
+    fun postWatch(@Field("unwatch") unwatch: Int?,
+                  @Field("pageids") pageIds: String?,
+                  @Field("titles") titles: String?,
+                  @Field("expiry") expiry: String?,
+                  @Field("token") token: String): Observable<WatchPostResponse?>?
 
-    @Headers("Cache-Control: no-cache")
-    @GET(MW_API_PREFIX + "action=query&meta=tokens&type=watch")
-    @NonNull Observable<MwQueryResponse> getWatchToken();
+    @get:GET(MW_API_PREFIX + "action=query&meta=tokens&type=watch")
+    @get:Headers("Cache-Control: no-cache")
+    val watchToken: Observable<MwQueryResponse?>
+
+    companion object {
+        const val WIKIPEDIA_URL = "https://wikipedia.org/"
+        const val WIKIDATA_URL = "https://www.wikidata.org/"
+        const val COMMONS_URL = "https://commons.wikimedia.org/"
+        const val URL_FRAGMENT_FROM_COMMONS = "/wikipedia/commons/"
+        const val MW_API_PREFIX = "w/api.php?format=json&formatversion=2&errorformat=plaintext&"
+        const val PREFERRED_THUMB_SIZE = 320
+
+        // Maximum cache time for site-specific data, and other things not likely to change very often.
+        const val SITE_INFO_MAXAGE = 86400
+    }
 }
