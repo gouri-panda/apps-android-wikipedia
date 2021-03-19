@@ -18,6 +18,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import kotlinx.coroutines.flow.flow
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateUtils
 import org.wikipedia.R
@@ -401,6 +402,9 @@ class ContributionsFragment : Fragment(), ContributionsHeaderView.Callback {
 
     private inner class ContributionItemHolder constructor(itemView: ContributionsItemView) : DefaultViewHolder<ContributionsItemView>(itemView) {
         val disposables = CompositeDisposable()
+        override fun foo(view: ContributionsItemView) {
+            TODO("Not yet implemented")
+        }
         fun bindItem(contribution: Contribution) {
             view.contribution = contribution
             view.setTitle(contribution.description)
